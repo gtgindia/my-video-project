@@ -11,10 +11,9 @@ video:
   provider: "openrouter"        # openrouter | minimax
   model: "x-ai/grok-imagine-video-1.5"
   minimax_base_url: "https://api.minimax.io/v1"   # only used when provider=minimax
-  # grok-imagine-video-1.5 max clip length is 15s.
-  # First episode: 9 scenes x 15s = ~135s (~2:15).
-  duration_seconds: 15
-  resolution: "720p"
+  # 9 scenes x 10s = 90s total.
+  duration_seconds: 10
+  resolution: "480p"
   aspect_ratio: "16:9"
   generate_audio: true
   max_workers: 3

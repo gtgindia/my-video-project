@@ -45,13 +45,14 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
     final = final_dir / f"{cfg.data['episode']['title'].replace(' ', '_')}.mp4"
     print(f"[stage 3] merging {len(clips)} clips")
     music_path = cfg.paths["music"] / f"background_music.{cfg.data['music']['format']}"
+    music_enabled = cfg.data["music"].get("enabled", False)
     merge_clips(
         clips,
         final,
         transition=cfg.editing["transition"],
         transition_duration=cfg.editing["transition_duration"],
         voiceover_path=None,  # wired in when stage 2 (TTS) is implemented
-        music_path=music_path if music_path.exists() else None,
+        music_path=music_path if music_enabled and music_path.exists() else None,
         voiceover_volume=cfg.editing["voiceover_volume"],
         music_volume=cfg.editing["music_volume"],
     )

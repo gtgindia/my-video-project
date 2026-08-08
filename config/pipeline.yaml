@@ -40,6 +40,7 @@ images:
       prompt: "Dynamic action pose, battle-ready, drawing a bow, cape flowing in the wind"
 
 music:
+  enabled: false               # set true to mix a score into the final video
   model: "google/lyria-3-clip-preview"
   format: "mp3"
   prompt: "Cinematic orchestral background score, dark fantasy, building tension, no vocals"

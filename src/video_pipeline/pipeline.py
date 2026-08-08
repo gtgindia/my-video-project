@@ -54,19 +54,24 @@ class Scene:
 
 
 def parse_scenes(script_path: str | Path) -> list[Scene]:
-    """Very simple parser: each '## Scene' heading starts a new scene."""
+    """Very simple parser: each '## Scene' heading starts a new scene.
+    A 'Character: <name>' line sets the scene's character."""
     text = Path(script_path).read_text()
     scenes: list[Scene] = []
     current: list[str] | None = None
+    character: str | None = None
     for line in text.splitlines():
         if line.startswith("## Scene"):
             if current is not None and any(l.strip() for l in current):
-                scenes.append(Scene("\n".join(current)))
+                scenes.append(Scene("\n".join(current), character))
             current = []
+            character = None
+        elif current is not None and line.strip().lower().startswith("character:"):
+            character = line.split(":", 1)[1].strip()
         elif current is not None:
             current.append(line)
     if current is not None and any(l.strip() for l in current):
-        scenes.append(Scene("\n".join(current)))
+        scenes.append(Scene("\n".join(current), character))
     return scenes
 
 

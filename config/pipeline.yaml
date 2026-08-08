@@ -1,14 +1,11 @@
 episode:
-  title: "Untitled Episode"
+  title: "Abhimanyu: The Chakravyuh"
   script: "assets/scripts/episode_001.md"
 
 characters:
-  hero:
-    reference: "assets/characters/hero/reference.png"
-    description: "assets/characters/hero/profile.md"
-  villain:
-    reference: "assets/characters/villain/reference.png"
-    description: "assets/characters/villain/profile.md"
+  abhimanyu:
+    reference: "assets/characters/abhimanyu/reference.png"
+    description: "assets/characters/abhimanyu/profile.md"
 
 video:
   provider: "openrouter"        # openrouter | minimax

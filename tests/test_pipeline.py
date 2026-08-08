@@ -13,5 +13,6 @@ def test_config_loads() -> None:
 
 def test_parse_scenes() -> None:
     scenes = parse_scenes("assets/scripts/episode_001.md")
-    assert len(scenes) == 3
-    assert "hero" in scenes[0].prompt.lower()
+    assert len(scenes) == 9
+    assert all(s.character == "abhimanyu" for s in scenes)
+    assert "anime" in scenes[0].prompt.lower()

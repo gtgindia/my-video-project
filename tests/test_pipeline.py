@@ -11,7 +11,7 @@ from video_pipeline.pipeline import Scene, parse_scenes, pick_reference_image
 def test_config_loads() -> None:
     cfg = PipelineConfig()
     assert cfg.video["provider"] == "openrouter"
-    assert cfg.video["model"] == "x-ai/grok-imagine-video-1.5"
+    assert cfg.video["model"] == "bytedance/seedance-2.0"
     assert cfg.dir_for("final").exists()
 
 

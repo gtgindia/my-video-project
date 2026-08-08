@@ -24,7 +24,19 @@ images:
   model: "qwen/qwen-image-3"
   resolution: "1K"
   aspect_ratio: "3:4"
-  prompt_prefix: "Character design reference sheet, consistent character, full body, clean neutral background, "
+  seed: 42
+  prompt_prefix: "Character design reference sheet, consistent character design, anime style, "
+  # First pose is text-to-image; the rest are derived from it (image-to-image)
+  # so face, clothes and colors stay identical across the sheet.
+  poses:
+    - name: "reference"
+      prompt: "Full body, front view, standing facing the camera, arms relaxed, entire outfit visible"
+    - name: "portrait"
+      prompt: "Portrait close-up, head and shoulders, face fully visible, gentle confident expression"
+    - name: "action"
+      prompt: "Dynamic action pose, battle-ready, drawing a bow, cape flowing in the wind"
+    - name: "profile"
+      prompt: "Three-quarter side profile view, mid-stride walking pose, looking over shoulder"
 
 music:
   model: "google/lyria-3-clip-preview"

@@ -28,16 +28,22 @@ class OpenRouterImageClient:
         model: str = "qwen/qwen-image-3",
         resolution: str = "1K",
         aspect_ratio: str = "3:4",
+        seed: int | None = None,
     ) -> None:
         self.model = model
         self.resolution = resolution
         self.aspect_ratio = aspect_ratio
+        self.seed = seed
         self.api_key = os.environ.get("VIDEO_MODEL_KEY")
         if not self.api_key:
             raise OpenRouterImageError("VIDEO_MODEL_KEY must be set in .env")
 
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self.api_key}"}
+
+    @staticmethod
+    def to_data_url(image_bytes: bytes, media_type: str = "image/png") -> str:
+        return f"data:{media_type};base64,{base64.b64encode(image_bytes).decode()}"
 
     def generate_image(
         self,
@@ -52,6 +58,8 @@ class OpenRouterImageClient:
             "resolution": self.resolution,
             "aspect_ratio": self.aspect_ratio,
         }
+        if self.seed is not None:
+            payload["seed"] = self.seed
         if reference_url:
             payload["input_references"] = [
                 {"type": "image_url", "image_url": {"url": reference_url}}

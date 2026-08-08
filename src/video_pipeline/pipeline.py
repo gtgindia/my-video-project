@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -10,7 +11,11 @@ from .providers import get_client
 
 
 def run_pipeline(cfg: PipelineConfig) -> Path:
-    """End-to-end run. Each stage writes to generated/ so it can be re-run."""
+    """End-to-end run. Each stage writes to generated/ so it can be re-run.
+
+    Clip jobs are persisted to generated/clips/jobs.json, so a re-run
+    reuses already-generated clips instead of paying for them again.
+    """
     clips_dir = cfg.dir_for("clips")
     final_dir = cfg.dir_for("final")
 
@@ -23,21 +28,40 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
     scenes = parse_scenes(cfg.data["episode"]["script"])
     default_duration = cfg.video["duration_seconds"]
     reference_image_urls = cfg.video.get("reference_image_urls") or None
-    submitted = [
-        client.submit_clip(
-            scene.prompt,
-            pick_reference_image(scene, cfg),
-            clips_dir,
-            duration_seconds=scene.duration or default_duration,
-            frame_image_url=frame_image_url,
-            reference_image_urls=reference_image_urls,
-        )
-        for scene in scenes
-    ]
+
+    jobs_file = clips_dir / "jobs.json"
+    jobs = json.loads(jobs_file.read_text()) if jobs_file.exists() else {}
+
+    pending: list[tuple[dict, Path]] = []
+    clips: list[Path] = []
+    for i, scene in enumerate(scenes):
+        key = f"scene_{i + 1:02d}"
+        clip_path = clips_dir / f"{key}.mp4"
+        if clip_path.exists():
+            print(f"[stage 1] scene {i + 1}: reusing {clip_path.name}")
+            clips.append(clip_path)
+            continue
+        if key in jobs:
+            job = {"id": jobs[key]["job_id"]}
+        else:
+            job, _ = client.submit_clip(
+                scene.prompt,
+                pick_reference_image(scene, cfg),
+                clips_dir,
+                duration_seconds=scene.duration or default_duration,
+                frame_image_url=frame_image_url,
+                reference_image_urls=reference_image_urls,
+            )
+        jobs[key] = {"job_id": job["id"], "filename": clip_path.name}
+        pending.append((job, clip_path))
+
+    jobs_file.write_text(json.dumps(jobs, indent=2))
+
     total_seconds = sum(s.duration or default_duration for s in scenes)
-    print(f"[stage 1] submitted {len(submitted)} clips (~{total_seconds}s total), waiting...")
+    print(f"[stage 1] {len(clips)} reused, {len(pending)} pending (~{total_seconds}s total), waiting...")
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        clips = list(ex.map(lambda job_path: client.wait_for_clip(*job_path), submitted))
+        done = list(ex.map(lambda job_path: client.wait_for_clip(*job_path), pending))
+    clips.extend(done)
 
     # Stage 2: voiceover for the full script
     # from .audio.tts import synthesize

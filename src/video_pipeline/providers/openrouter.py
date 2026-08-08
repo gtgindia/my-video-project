@@ -142,6 +142,7 @@ class OpenRouterClient:
 
     def _poll(self, job: dict, timeout: int = 1800) -> dict:
         elapsed = 0
+        last_status = None
         while elapsed < timeout:
             status = job.get("status")
             if status == "completed":
@@ -159,15 +160,17 @@ class OpenRouterClient:
             )
             resp.raise_for_status()
             job = resp.json()
-            print(f"[openrouter] job {job.get('id')}: {job.get('status')}")
+            if job.get("status") != last_status:
+                print(f"[openrouter] job {job.get('id')}: {job.get('status')}")
+                last_status = job.get("status")
         raise OpenRouterError(f"Video job {job.get('id')} timed out")
 
     def _download(self, job: dict, dest: Path) -> None:
         video_url = job.get("unsigned_urls", [None])[0]
-        headers = None
         if not video_url:
             video_url = f"{API_BASE}/videos/{job['id']}/content?index=0"
-            headers = self._headers()
+        # OpenRouter-hosted URLs (even from unsigned_urls) need the bearer token
+        headers = self._headers() if video_url.startswith("https://openrouter.ai/api/") else None
         with httpx.stream("GET", video_url, headers=headers, timeout=300) as r:
             r.raise_for_status()
             with dest.open("wb") as f:

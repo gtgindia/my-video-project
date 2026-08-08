@@ -9,7 +9,7 @@ characters:
 
 video:
   provider: "openrouter"        # openrouter | minimax
-  model: "x-ai/grok-imagine-video-1.5"
+  model: "bytedance/seedance-2.0"
   minimax_base_url: "https://api.minimax.io/v1"   # only used when provider=minimax
   # 9 scenes x 10s = 90s total.
   duration_seconds: 10

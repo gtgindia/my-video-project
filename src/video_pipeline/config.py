@@ -14,7 +14,7 @@ class PipelineConfig:
         self.path = Path(path)
         with self.path.open() as f:
             self.data = yaml.safe_load(f)
-        self.minimax = self.data["minimax"]
+        self.video = self.data["video"]
         self.tts = self.data["tts"]
         self.editing = self.data["editing"]
         self.paths = {k: ROOT / v for k, v in self.data["paths"].items()}

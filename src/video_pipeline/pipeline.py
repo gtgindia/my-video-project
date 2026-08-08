@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .config import PipelineConfig
-from .providers.minimax import MiniMaxClient
+from .providers import get_client
 
 
 def run_pipeline(cfg: PipelineConfig) -> Path:
@@ -14,8 +14,9 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
     voiceover_dir = cfg.dir_for("voiceover")
     final_dir = cfg.dir_for("final")
 
-    client = MiniMaxClient(cfg.minimax["base_url"], cfg.minimax["model"])
-    print(f"[stage 0] provider: {cfg.minimax['provider']} (model {cfg.minimax['model']})")
+    client = get_client(cfg)
+    print(f"[stage 0] provider: {cfg.video['provider']} (model {cfg.video['model']})")
+    frame_image_url = cfg.video.get("frame_image_url") or None
 
     # Stage 1: generate one clip per scene (parse from script)
     scenes = parse_scenes(cfg.data["episode"]["script"])
@@ -23,7 +24,15 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
     for i, scene in enumerate(scenes):
         image = pick_reference_image(scene, cfg)
         print(f"[stage 1] generating clip {i + 1}/{len(scenes)}")
-        clips.append(client.generate_clip(scene.prompt, image, clips_dir))
+        clips.append(
+            client.generate_clip(
+                scene.prompt,
+                image,
+                clips_dir,
+                duration_seconds=cfg.video["duration_seconds"],
+                frame_image_url=frame_image_url,
+            )
+        )
 
     # Stage 2: voiceover for the full script
     # from .audio.tts import synthesize

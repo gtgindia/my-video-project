@@ -1,7 +1,8 @@
 # my-video-project
 
 AI-assisted video production pipeline: script + character images -> short
-clips (MiniMax H3) -> merged 10-minute video (MoviePy).
+clips (OpenRouter video models, e.g. x-ai/grok-imagine-video-1.5) -> merged
+10-minute video (MoviePy).
 
 ## Setup
 

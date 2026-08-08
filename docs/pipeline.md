@@ -4,10 +4,11 @@
 
 `scripts/run_pipeline.py` parses `assets/scripts/episode_001.md` (each `## Scene`
 heading becomes a clip). For every scene it sends the scene text + a character
-reference image (`assets/characters/*/reference.png`) to MiniMax H3 and
-downloads a short mp4 into `generated/clips/`.
+reference image (`assets/characters/*/reference.png`) to OpenRouter
+(`x-ai/grok-imagine-video-1.5` by default) and downloads a short mp4 into
+`generated/clips/`.
 
-Config: `config/pipeline.yaml` -> `minimax` section.
+Config: `config/pipeline.yaml` -> `video` section.
 
 ## Stage 2 - Voiceover (planned)
 

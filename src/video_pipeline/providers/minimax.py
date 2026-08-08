@@ -44,6 +44,7 @@ class MiniMaxClient:
         image_path: Path,
         output_dir: Path,
         duration_seconds: int = 10,
+        frame_image_url: str | None = None,
     ) -> Path:
         """Generate one clip from a reference image + prompt. Returns the mp4 path."""
         with image_path.open("rb") as f:

@@ -15,15 +15,18 @@ characters:
     reference: "assets/characters/villain/reference.png"
     description: "assets/characters/villain/profile.md"
 
-minimax:
-  provider: "minimax"          # minimax | openrouter | gemini | grok (all use VIDEO_MODEL_KEY)
-  model: "Hailuo-03"
-  base_url: "https://api.minimax.io/v1"
-  num_steps: 30
-  cfg_scale: 1.0
-  resolution: "1920x1080"
-  fps: 30
-  duration_seconds: 10
+video:
+  provider: "openrouter"        # openrouter | minimax
+  model: "x-ai/grok-imagine-video-1.5"
+  base_url: "https://openrouter.ai/api/v1"   # minimax-only
+  duration_seconds: 8
+  resolution: "1080p"
+  aspect_ratio: "16:9"
+  generate_audio: true
+  # Optional: public HTTPS URL for the first frame (avoids file upload).
+  # Otherwise the local reference image is uploaded via the Files API
+  # (requires a management key).
+  frame_image_url: ""
 
 tts:
   provider: "edge"

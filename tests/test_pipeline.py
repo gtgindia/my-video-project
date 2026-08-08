@@ -6,7 +6,8 @@ from video_pipeline.pipeline import parse_scenes
 
 def test_config_loads() -> None:
     cfg = PipelineConfig()
-    assert cfg.minimax["model"] == "Hailuo-03"
+    assert cfg.video["provider"] == "openrouter"
+    assert cfg.video["model"] == "x-ai/grok-imagine-video-1.5"
     assert cfg.dir_for("final").exists()
 
 

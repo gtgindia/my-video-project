@@ -1,0 +1,11 @@
+.venv/
+.env
+
+# Generated output - never commit render artifacts
+generated/
+models/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

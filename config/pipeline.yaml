@@ -1,0 +1,42 @@
+video:
+  resolution: "1920x1080"
+  fps: 30
+  target_duration_minutes: 10
+
+episode:
+  title: "Untitled Episode"
+  script: "assets/scripts/episode_001.md"
+
+characters:
+  hero:
+    reference: "assets/characters/hero/reference.png"
+    description: "assets/characters/hero/profile.md"
+  villain:
+    reference: "assets/characters/villain/reference.png"
+    description: "assets/characters/villain/profile.md"
+
+minimax:
+  model: "Hailuo-03"
+  base_url: "https://api.minimax.io/v1"
+  num_steps: 30
+  cfg_scale: 1.0
+  resolution: "1920x1080"
+  fps: 30
+  duration_seconds: 10
+
+tts:
+  provider: "edge"
+  voice: "en-US-GuyNeural"
+  speed: 1.0
+
+editing:
+  transition: "crossfade"
+  transition_duration: 0.5
+  music_volume: 0.15
+  voiceover_volume: 1.0
+
+paths:
+  clips: "generated/clips"
+  voiceover: "generated/voiceover"
+  drafts: "generated/drafts"
+  final: "generated/final"

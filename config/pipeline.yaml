@@ -17,10 +17,14 @@ video:
   aspect_ratio: "16:9"
   generate_audio: true
   max_workers: 3
-  # Optional: public HTTPS URL for the first frame (avoids file upload).
-  # Otherwise the local reference image is uploaded via the Files API
-  # (requires a management key).
-  frame_image_url: ""
+  # First frame (image-to-video anchor). Must be a public HTTPS URL.
+  # Local files need the Files API which requires a management key, so we
+  # use GitHub raw URLs of the committed character sheets instead.
+  frame_image_url: "https://raw.githubusercontent.com/gtgindia/my-video-project/master/assets/characters/abhimanyu/reference.png"
+  # Style references (reference-to-video) for extra character consistency.
+  reference_image_urls:
+    - "https://raw.githubusercontent.com/gtgindia/my-video-project/master/assets/characters/abhimanyu/poses/portrait.png"
+    - "https://raw.githubusercontent.com/gtgindia/my-video-project/master/assets/characters/abhimanyu/poses/action.png"
 
 images:
   model: "qwen/qwen-image-3"

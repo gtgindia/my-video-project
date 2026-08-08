@@ -66,6 +66,7 @@ class OpenRouterClient:
         output_dir: Path,
         duration_seconds: int = 8,
         frame_image_url: str | None = None,
+        reference_image_urls: list[str] | None = None,
     ) -> tuple[dict, Path]:
         """Submit a clip job and return (job, destination path) without waiting."""
         payload = {
@@ -89,6 +90,11 @@ class OpenRouterClient:
                     "image_url": {"url": image_url},
                     "frame_type": "first_frame",
                 }
+            ]
+        if reference_image_urls:
+            payload["input_references"] = [
+                {"type": "image_url", "image_url": {"url": url}}
+                for url in reference_image_urls
             ]
 
         resp = httpx.post(f"{API_BASE}/videos", headers=self._headers(), json=payload, timeout=60)

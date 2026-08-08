@@ -21,17 +21,21 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
 
     # Stage 1: submit one clip per scene, then wait for all in parallel
     scenes = parse_scenes(cfg.data["episode"]["script"])
+    default_duration = cfg.video["duration_seconds"]
+    reference_image_urls = cfg.video.get("reference_image_urls") or None
     submitted = [
         client.submit_clip(
             scene.prompt,
             pick_reference_image(scene, cfg),
             clips_dir,
-            duration_seconds=cfg.video["duration_seconds"],
+            duration_seconds=scene.duration or default_duration,
             frame_image_url=frame_image_url,
+            reference_image_urls=reference_image_urls,
         )
         for scene in scenes
     ]
-    print(f"[stage 1] submitted {len(submitted)} clips, waiting...")
+    total_seconds = sum(s.duration or default_duration for s in scenes)
+    print(f"[stage 1] submitted {len(submitted)} clips (~{total_seconds}s total), waiting...")
     with ThreadPoolExecutor(max_workers=workers) as ex:
         clips = list(ex.map(lambda job_path: client.wait_for_clip(*job_path), submitted))
 
@@ -60,30 +64,37 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
 
 
 class Scene:
-    def __init__(self, prompt: str, character: str | None = None) -> None:
+    def __init__(self, prompt: str, character: str | None = None, duration: int | None = None) -> None:
         self.prompt = prompt
         self.character = character
+        self.duration = duration
 
 
 def parse_scenes(script_path: str | Path) -> list[Scene]:
     """Very simple parser: each '## Scene' heading starts a new scene.
-    A 'Character: <name>' line sets the scene's character."""
+    'Character: <name>' and 'Duration: Ns' lines set scene metadata."""
     text = Path(script_path).read_text()
     scenes: list[Scene] = []
     current: list[str] | None = None
     character: str | None = None
+    duration: int | None = None
     for line in text.splitlines():
         if line.startswith("## Scene"):
             if current is not None and any(l.strip() for l in current):
-                scenes.append(Scene("\n".join(current), character))
+                scenes.append(Scene("\n".join(current), character, duration))
             current = []
             character = None
-        elif current is not None and line.strip().lower().startswith("character:"):
-            character = line.split(":", 1)[1].strip()
+            duration = None
         elif current is not None:
-            current.append(line)
+            stripped = line.strip().lower()
+            if stripped.startswith("character:"):
+                character = line.split(":", 1)[1].strip()
+            elif stripped.startswith("duration:"):
+                duration = int("".join(ch for ch in line.split(":", 1)[1] if ch.isdigit()))
+            else:
+                current.append(line)
     if current is not None and any(l.strip() for l in current):
-        scenes.append(Scene("\n".join(current), character))
+        scenes.append(Scene("\n".join(current), character, duration))
     return scenes
 
 

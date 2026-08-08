@@ -53,7 +53,21 @@ class OpenRouterClient:
         duration_seconds: int = 8,
         frame_image_url: str | None = None,
     ) -> Path:
-        """Generate one clip from a prompt (+ optional first-frame image)."""
+        """Generate one clip: submit + wait (serial helper)."""
+        job, clip_path = self.submit_clip(
+            prompt, image_path, output_dir, duration_seconds, frame_image_url
+        )
+        return self.wait_for_clip(job, clip_path)
+
+    def submit_clip(
+        self,
+        prompt: str,
+        image_path: Path | None,
+        output_dir: Path,
+        duration_seconds: int = 8,
+        frame_image_url: str | None = None,
+    ) -> tuple[dict, Path]:
+        """Submit a clip job and return (job, destination path) without waiting."""
         payload = {
             "model": self.model,
             "prompt": prompt,
@@ -83,10 +97,13 @@ class OpenRouterClient:
         resp.raise_for_status()
 
         job = resp.json()
-        print(f"[openrouter] submitted job {job['id']} ({job['status']})")
-        job = self._poll(job)
-
         clip_path = output_dir / f"{job['id']}.mp4"
+        print(f"[openrouter] submitted job {job['id']} ({job['status']})")
+        return job, clip_path
+
+    def wait_for_clip(self, job: dict, clip_path: Path) -> Path:
+        """Poll a submitted job until completion, then download the clip."""
+        job = self._poll(job)
         self._download(job, clip_path)
         return clip_path
 

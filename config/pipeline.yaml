@@ -11,10 +11,13 @@ video:
   provider: "openrouter"        # openrouter | minimax
   model: "x-ai/grok-imagine-video-1.5"
   minimax_base_url: "https://api.minimax.io/v1"   # only used when provider=minimax
-  duration_seconds: 8
-  resolution: "1080p"
+  # grok-imagine-video-1.5 max clip length is 15s.
+  # First episode: 9 scenes x 15s = ~135s (~2:15).
+  duration_seconds: 15
+  resolution: "720p"
   aspect_ratio: "16:9"
   generate_audio: true
+  max_workers: 3
   # Optional: public HTTPS URL for the first frame (avoids file upload).
   # Otherwise the local reference image is uploaded via the Files API
   # (requires a management key).
@@ -28,6 +31,7 @@ images:
   prompt_prefix: "Character design reference sheet, consistent character design, anime style, "
   # First pose is text-to-image; the rest are derived from it (image-to-image)
   # so face, clothes and colors stay identical across the sheet.
+  max_workers: 3
   poses:
     - name: "reference"
       prompt: "Full body, front view, standing facing the camera, arms relaxed, entire outfit visible"
@@ -35,8 +39,6 @@ images:
       prompt: "Portrait close-up, head and shoulders, face fully visible, gentle confident expression"
     - name: "action"
       prompt: "Dynamic action pose, battle-ready, drawing a bow, cape flowing in the wind"
-    - name: "profile"
-      prompt: "Three-quarter side profile view, mid-stride walking pose, looking over shoulder"
 
 music:
   model: "google/lyria-3-clip-preview"

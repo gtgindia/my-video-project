@@ -1,7 +1,8 @@
-"""Pipeline orchestrator: script -> clips -> voiceover -> merged video."""
+"""Pipeline orchestrator: script -> clips -> music -> merged video."""
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .config import PipelineConfig
@@ -11,28 +12,28 @@ from .providers import get_client
 def run_pipeline(cfg: PipelineConfig) -> Path:
     """End-to-end run. Each stage writes to generated/ so it can be re-run."""
     clips_dir = cfg.dir_for("clips")
-    voiceover_dir = cfg.dir_for("voiceover")
     final_dir = cfg.dir_for("final")
 
     client = get_client(cfg)
     print(f"[stage 0] provider: {cfg.video['provider']} (model {cfg.video['model']})")
     frame_image_url = cfg.video.get("frame_image_url") or None
+    workers = cfg.video.get("max_workers", 3)
 
-    # Stage 1: generate one clip per scene (parse from script)
+    # Stage 1: submit one clip per scene, then wait for all in parallel
     scenes = parse_scenes(cfg.data["episode"]["script"])
-    clips: list[Path] = []
-    for i, scene in enumerate(scenes):
-        image = pick_reference_image(scene, cfg)
-        print(f"[stage 1] generating clip {i + 1}/{len(scenes)}")
-        clips.append(
-            client.generate_clip(
-                scene.prompt,
-                image,
-                clips_dir,
-                duration_seconds=cfg.video["duration_seconds"],
-                frame_image_url=frame_image_url,
-            )
+    submitted = [
+        client.submit_clip(
+            scene.prompt,
+            pick_reference_image(scene, cfg),
+            clips_dir,
+            duration_seconds=cfg.video["duration_seconds"],
+            frame_image_url=frame_image_url,
         )
+        for scene in scenes
+    ]
+    print(f"[stage 1] submitted {len(submitted)} clips, waiting...")
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        clips = list(ex.map(lambda job_path: client.wait_for_clip(*job_path), submitted))
 
     # Stage 2: voiceover for the full script
     # from .audio.tts import synthesize

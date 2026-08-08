@@ -4,15 +4,16 @@ For each character in config/pipeline.yaml:
   1. reference.png  - full body, front view (text-to-image, fixed seed)
   2. portrait.png   - face close-up (derived from reference via input_reference)
   3. action.png     - dynamic pose (derived from reference)
-  4. profile.png    - three-quarter view (derived from reference)
 
-Poses 2-4 use the master reference as an image input, so clothes, colors
-and face stay identical across the sheet.
+Parallelized in two phases:
+  Phase 1 - all masters generated concurrently (they have no dependencies)
+  Phase 2 - all chained poses generated concurrently (each depends only on
+            its own character's master, which is ready by now)
 """
 
 from __future__ import annotations
 
-import base64
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from video_pipeline.config import PipelineConfig
@@ -30,33 +31,41 @@ def main() -> None:
     )
     prompt_prefix = images.get("prompt_prefix", "")
     poses = images.get("poses", [{"name": "reference", "prompt": "Full body, front view, facing camera"}])
+    workers = images.get("max_workers", 3)
 
-    for name, char in cfg.data["characters"].items():
-        char_dir = Path(char["reference"]).parent
-        poses_dir = char_dir / "poses"
-        poses_dir.mkdir(parents=True, exist_ok=True)
-
+    chars = cfg.data["characters"]
+    identities: dict[str, str] = {}
+    for name, char in chars.items():
         profile = Path(char["description"])
-        # Use only the visual description sections; skip meta instructions
-        # (e.g. the "Prompt style" section meant for video prompts).
         profile_text = profile.read_text().split("## Prompt style")[0] if profile.exists() else ""
-        identity = f"{prompt_prefix}\n{profile_text}".strip()
+        identities[name] = f"{prompt_prefix}\n{profile_text}".strip()
 
-        master_bytes: bytes | None = None
-        for pose in poses:
-            prompt = f"{identity}\n\nPose: {pose['prompt']}"
-            if pose["name"] == "reference":
-                output = Path(char["reference"])
-            else:
-                output = poses_dir / f"{pose['name']}.png"
+    def make_pose(name: str, pose_name: str, prompt: str, master_bytes: bytes | None) -> Path:
+        char_dir = Path(chars[name]["reference"]).parent
+        output = Path(chars[name]["reference"]) if pose_name == "reference" else char_dir / "poses" / f"{pose_name}.png"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        reference = client.to_data_url(master_bytes) if master_bytes else None
+        print(f"[images] {name}: {pose_name}")
+        return client.generate_image(prompt, output, reference_url=reference)
 
-            print(f"[images] {name}: {pose['name']}")
-            reference = None
-            if master_bytes is not None:
-                reference = client.to_data_url(master_bytes)
-            saved = client.generate_image(prompt, output, reference_url=reference)
-            if master_bytes is None:
-                master_bytes = saved.read_bytes()
+    # Phase 1: masters, one per character, in parallel
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = {
+            ex.submit(make_pose, name, "reference", poses[0]["prompt"], None): name
+            for name in chars
+        }
+        masters = {}
+        for fut in futures:
+            masters[futures[fut]] = fut.result().read_bytes()
+
+    # Phase 2: chained poses, all characters/poses in parallel
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        tasks = [
+            (name, pose["name"], pose["prompt"], masters[name])
+            for name in chars
+            for pose in poses[1:]
+        ]
+        list(ex.map(lambda t: make_pose(*t), tasks))
 
     print("Done. Character sheets in assets/characters/<name>/")
 

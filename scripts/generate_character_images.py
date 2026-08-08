@@ -37,7 +37,10 @@ def main() -> None:
         poses_dir.mkdir(parents=True, exist_ok=True)
 
         profile = Path(char["description"])
-        identity = f"{prompt_prefix}\n{profile.read_text()}" if profile.exists() else prompt_prefix
+        # Use only the visual description sections; skip meta instructions
+        # (e.g. the "Prompt style" section meant for video prompts).
+        profile_text = profile.read_text().split("## Prompt style")[0] if profile.exists() else ""
+        identity = f"{prompt_prefix}\n{profile_text}".strip()
 
         master_bytes: bytes | None = None
         for pose in poses:

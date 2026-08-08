@@ -43,7 +43,17 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
 
     final = final_dir / f"{cfg.data['episode']['title'].replace(' ', '_')}.mp4"
     print(f"[stage 3] merging {len(clips)} clips")
-    merge_clips(clips, final, **cfg.editing)
+    music_path = cfg.paths["music"] / f"background_music.{cfg.data['music']['format']}"
+    merge_clips(
+        clips,
+        final,
+        transition=cfg.editing["transition"],
+        transition_duration=cfg.editing["transition_duration"],
+        voiceover_path=None,  # wired in when stage 2 (TTS) is implemented
+        music_path=music_path if music_path.exists() else None,
+        voiceover_volume=cfg.editing["voiceover_volume"],
+        music_volume=cfg.editing["music_volume"],
+    )
     return final
 
 
@@ -76,7 +86,8 @@ def parse_scenes(script_path: str | Path) -> list[Scene]:
 
 
 def pick_reference_image(scene: Scene, cfg: PipelineConfig) -> Path:
-    """Character reference image for the scene, falling back to a default."""
-    if scene.character and scene.character in cfg.data["characters"]:
-        return Path(cfg.data["characters"][scene.character]["reference"])
-    return Path(cfg.data["characters"]["hero"]["reference"])
+    """Character reference image for the scene, falling back to the first configured character."""
+    chars = cfg.data["characters"]
+    if scene.character and scene.character in chars:
+        return Path(chars[scene.character]["reference"])
+    return Path(next(iter(chars.values()))["reference"])

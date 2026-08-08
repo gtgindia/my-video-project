@@ -17,5 +17,6 @@ def get_client(cfg) -> OpenRouterClient:
     if provider == "minimax":
         from .minimax import MiniMaxClient
 
-        return MiniMaxClient(cfg.video["base_url"], cfg.video["model"])
+        base_url = cfg.video.get("minimax_base_url") or "https://api.minimax.io/v1"
+        return MiniMaxClient(base_url, cfg.video["model"])
     raise ValueError(f"Unknown provider: {provider}")

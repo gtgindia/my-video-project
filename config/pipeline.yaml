@@ -10,7 +10,7 @@ characters:
 video:
   provider: "openrouter"        # openrouter | minimax
   model: "x-ai/grok-imagine-video-1.5"
-  base_url: "https://openrouter.ai/api/v1"   # minimax-only
+  minimax_base_url: "https://api.minimax.io/v1"   # only used when provider=minimax
   duration_seconds: 8
   resolution: "1080p"
   aspect_ratio: "16:9"

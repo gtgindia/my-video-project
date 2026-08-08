@@ -15,6 +15,7 @@ def run_pipeline(cfg: PipelineConfig) -> Path:
     final_dir = cfg.dir_for("final")
 
     client = MiniMaxClient(cfg.minimax["base_url"], cfg.minimax["model"])
+    print(f"[stage 0] provider: {cfg.minimax['provider']} (model {cfg.minimax['model']})")
 
     # Stage 1: generate one clip per scene (parse from script)
     scenes = parse_scenes(cfg.data["episode"]["script"])

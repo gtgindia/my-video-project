@@ -27,10 +27,13 @@ class MiniMaxClient:
     def __init__(self, base_url: str, model: str) -> None:
         self.base_url = base_url
         self.model = model
-        self.api_key = os.environ.get("MINIMAX_API_KEY")
+        # Generic key: VIDEO_MODEL_KEY works for OpenRouter, MiniMax, Gemini, Grok, ...
+        self.api_key = os.environ.get("VIDEO_MODEL_KEY")
         self.group_id = os.environ.get("MINIMAX_GROUP_ID")
-        if not self.api_key or not self.group_id:
-            raise MiniMaxError("MINIMAX_API_KEY and MINIMAX_GROUP_ID must be set in .env")
+        if not self.api_key:
+            raise MiniMaxError("VIDEO_MODEL_KEY must be set in .env")
+        if not self.group_id:
+            raise MiniMaxError("MINIMAX_GROUP_ID must be set in .env for MiniMax")
 
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self.api_key}"}

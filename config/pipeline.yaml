@@ -16,6 +16,7 @@ characters:
     description: "assets/characters/villain/profile.md"
 
 minimax:
+  provider: "minimax"          # minimax | openrouter | gemini | grok (all use VIDEO_MODEL_KEY)
   model: "Hailuo-03"
   base_url: "https://api.minimax.io/v1"
   num_steps: 30

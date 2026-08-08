@@ -28,6 +28,12 @@ video:
   # (requires a management key).
   frame_image_url: ""
 
+images:
+  model: "qwen/qwen-image-3"
+  resolution: "1K"
+  aspect_ratio: "3:4"
+  prompt_prefix: "Character design reference sheet, consistent character, full body, clean neutral background, " 
+
 tts:
   provider: "edge"
   voice: "en-US-GuyNeural"
